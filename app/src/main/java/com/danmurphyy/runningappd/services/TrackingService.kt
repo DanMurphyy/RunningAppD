@@ -38,6 +38,7 @@ typealias Polylines = MutableList<Polyline>
 class TrackingService : LifecycleService() {
 
     private var isFirstRun = true
+    private var serviceKilled = false
 
     @Inject
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -73,6 +74,15 @@ class TrackingService : LifecycleService() {
         }
     }
 
+    private fun killService() {
+        serviceKilled = true
+        isFirstRun = true
+        pauseService()
+        postInitialValues()
+        stopForeground(true)
+        stopSelf()
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
             when (it.action) {
@@ -92,6 +102,7 @@ class TrackingService : LifecycleService() {
 
                 Constants.ACTION_STOP_SERVICE -> {
                     Timber.d("ACTION_STOP_SERVICE")
+                    killService()
                 }
             }
         }
@@ -184,10 +195,16 @@ class TrackingService : LifecycleService() {
             isAccessible = true
             set(currentNotificationBuilder, ArrayList<NotificationCompat.Action>())
         }
-        currentNotificationBuilder = baseNotificationBuilder
-            .addAction(R.drawable.ic_pause_black_24dp, notificationActionText, pendingIntent)
-
-        notificationManager.notify(Constants.NOTIFICATION_ID, currentNotificationBuilder.build())
+        if (!serviceKilled) {
+            currentNotificationBuilder = baseNotificationBuilder.addAction(
+                    R.drawable.ic_pause_black_24dp,
+                    notificationActionText,
+                    pendingIntent
+                )
+            notificationManager.notify(
+                Constants.NOTIFICATION_ID, currentNotificationBuilder.build()
+            )
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -195,24 +212,17 @@ class TrackingService : LifecycleService() {
         if (isTracking) {
             if (TrackingUtils.hasLocationPermissions(this)) {
                 val request = LocationRequest.Builder(
-                    Priority.PRIORITY_HIGH_ACCURACY,
-                    Constants.LOCATION_UPDATE_INTERVAL
-                )
-                    .setWaitForAccurateLocation(false)
+                    Priority.PRIORITY_HIGH_ACCURACY, Constants.LOCATION_UPDATE_INTERVAL
+                ).setWaitForAccurateLocation(false)
                     .setMinUpdateIntervalMillis(Constants.FASTEST_LOCATION_INTERVAL)
-                    .setMaxUpdateDelayMillis(Constants.MAX_DELAY_LOCATION_INTERVAL)
-                    .build()
-
+                    .setMaxUpdateDelayMillis(Constants.MAX_DELAY_LOCATION_INTERVAL).build()
                 fusedLocationProviderClient.requestLocationUpdates(
-                    request,
-                    locationCallback,
-                    Looper.getMainLooper()
+                    request, locationCallback, Looper.getMainLooper()
                 )
             }
         } else {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback)
         }
-
     }
 
     private fun addEmptyPolyline() = pathPoints.value?.apply {
@@ -231,19 +241,20 @@ class TrackingService : LifecycleService() {
         }
 
         startForeground(Constants.NOTIFICATION_ID, baseNotificationBuilder.build())
-        timeRunInSeconds.observe(this) {
-            val notification = currentNotificationBuilder
-                .setContentText(TrackingUtils.getFormattedStopWatchTime(it * 1000L))
-            notificationManager.notify(Constants.NOTIFICATION_ID, notification.build())
+        if (!serviceKilled) {
+            timeRunInSeconds.observe(this) {
+                val notification = currentNotificationBuilder.setContentText(
+                        TrackingUtils.getFormattedStopWatchTime(it * 1000L)
+                    )
+                notificationManager.notify(Constants.NOTIFICATION_ID, notification.build())
+            }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel(notificationManager: NotificationManager) {
         val channel = NotificationChannel(
-            Constants.NOTIFICATION_CHANNEL_ID,
-            Constants.NOTIFICATION_CHANNEL_NAME,
-            IMPORTANCE_LOW
+            Constants.NOTIFICATION_CHANNEL_ID, Constants.NOTIFICATION_CHANNEL_NAME, IMPORTANCE_LOW
         )
         notificationManager.createNotificationChannel(channel)
     }

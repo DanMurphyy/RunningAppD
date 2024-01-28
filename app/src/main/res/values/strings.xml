@@ -34,11 +34,22 @@
     <string name="cancel">Cancel</string>
     <string name="location_in_app_settings">Location permission is required to track your runs. Please grant the permission in app settings.</string>
     <string name="stop">Stop</string>
+    <string name="cancel_run">Cancel Run</string>
+    <string name="cancel_the_run">Cancel the run?</string>
+    <string name="are_you_sure_to_cance">Are you sure to cancel current run and delete all its data?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="run_saved_successfully">Run saved successfully</string>
+    <string name="please_enter_all_the_fields">Please enter All the fields</string>
+    <string name="changes_saved">Saved changes</string>
+    <string name="duration">DURATION</string>
+    <string name="avg_speed">AVG SPEED</string>
+    <string name="calories_burned">CALORIES BURNED</string>
     <string-array name="filter_options">
         <item>Date</item>
-        <item>Running Time</item>
         <item>Distance</item>
-        <item>Average Speed</item>
         <item>Calories Burned</item>
+        <item>Running Time</item>
+        <item>Average Speed</item>
     </string-array>
 </resources>
