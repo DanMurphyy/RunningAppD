@@ -1,6 +1,5 @@
 package com.danmurphyy.runningappd.utils
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.TextView
 import com.danmurphyy.runningappd.R
@@ -8,21 +7,27 @@ import com.danmurphyy.runningappd.db.Run
 import com.github.mikephil.charting.components.MarkerView
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.utils.MPPointF
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-@SuppressLint("ViewConstructor")
+
 class CustomMarkerView(
     private val runs: List<Run>,
     c: Context,
-) : MarkerView(c, R.layout.marker_view) {
+    layoutId: Int,
+) : MarkerView(c, layoutId) {
 
     private val tvDate: TextView = findViewById(R.id.markerTvDate)
     private val tvAvgSpeed: TextView = findViewById(R.id.markerTvAvgSpeed)
     private val tvDistance: TextView = findViewById(R.id.markerTvDistance)
     private val tvDuration: TextView = findViewById(R.id.markerTvDuration)
     private val tvCaloriesBurned: TextView = findViewById(R.id.markerTvCaloriesBurned)
+
+    override fun getOffset(): MPPointF {
+        return MPPointF(-width / 2f, -height.toFloat())
+    }
 
     override fun refreshContent(e: Entry?, highlight: Highlight?) {
         super.refreshContent(e, highlight)

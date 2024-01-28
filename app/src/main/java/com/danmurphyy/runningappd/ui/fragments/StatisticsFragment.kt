@@ -101,6 +101,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
                 binding.barChart.marker = CustomMarkerView(
                     it.reversed(),
                     requireContext(),
+                    R.layout.marker_view
                 )
             }
         }
